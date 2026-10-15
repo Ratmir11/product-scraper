@@ -1,4 +1,6 @@
-from scraper import parse_books, get_next_page, save_to_csv, save_to_json, get_page
+from scraper import parse_books, get_next_page, save_to_csv, save_to_json,\
+    get_page, scrape_all_books
+scrape_all_books
 from unittest.mock import Mock, patch
 import pytest
 import csv
@@ -129,3 +131,54 @@ def test_get_page_failure():
                 get_page("https://example.com")
 
     assert mock_get.call_count == 3
+
+
+def test_scrape_all_books(monkeypatch):
+    page_1 = """
+    <html>
+        <article class="product_pod">
+            <h3><a href="book1.html" title="Python Basics">Book</a></h3>
+            <p class="price_color">£20.00</p>
+            <p class="availability">In stock</p>
+            <p class="star-rating Five"></p>
+        </article>
+
+        <li class="next"><a href="page-2.html">Next</a></li>
+    </html>
+    """
+
+    page_2 = """
+    <html>
+        <article class="product_pod">
+            <h3><a href="book2.html" title="Advanced Python">Book</a></h3>
+            <p class="price_color">£30.00</p>
+            <p class="availability">In stock</p>
+            <p class="star-rating Four"></p>
+        </article>
+    </html>
+    """
+
+    pages = {
+        "https://example.com/page-1.html": page_1,
+        "https://example.com/page-2.html": page_2,
+    }
+
+    visited_urls = []
+
+    def fake_get_page(url):
+        visited_urls.append(url)
+        return pages[url]
+
+    monkeypatch.setattr("scraper.START_URL", "https://example.com/page-1.html")
+    monkeypatch.setattr("scraper.get_page", fake_get_page)
+
+    books = scrape_all_books(max_pages=2)
+
+    assert len(books) == 2
+    assert books[0]["title"] == "Python Basics"
+    assert books[1]["title"] == "Advanced Python"
+
+    assert visited_urls == [
+        "https://example.com/page-1.html",
+        "https://example.com/page-2.html",
+    ]
