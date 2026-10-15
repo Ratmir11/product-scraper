@@ -1,5 +1,6 @@
-from scraper import parse_books, get_next_page
-
+from scraper import parse_books, get_next_page, save_to_csv, save_to_json
+import csv
+import json
 
 def test_parse_books():
     html = """
@@ -57,3 +58,44 @@ def test_get_next_page_when_missing():
     )
 
     assert next_page is None
+
+
+def test_save_to_csv(tmp_path):
+    books = [
+        {
+            "title": "Python Basics",
+            "price": "£20.00",
+            "rating": "Five",
+            "availability": "In stock",
+            "url": "https://example.com/book",
+        }
+    ]
+
+    filename = tmp_path / "books.csv"
+    save_to_csv(books, filename)
+
+    with open(filename, encoding="utf-8", newline="") as file:
+        rows = list(csv.DictReader(file))
+
+    assert len(rows) == 1
+    assert rows[0] == books[0]
+
+
+def test_save_to_json(tmp_path):
+    books = [
+        {
+            "title": "Python Basics",
+            "price": "£20.00",
+            "rating": "Five",
+            "availability": "In stock",
+            "url": "https://example.com/book",
+        }
+    ]
+
+    filename = tmp_path / "books.json"
+    save_to_json(books, filename)
+
+    with open(filename, encoding="utf-8") as file:
+        saved_books = json.load(file)
+
+    assert saved_books == books
