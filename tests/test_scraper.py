@@ -1,6 +1,9 @@
-from scraper import parse_books, get_next_page, save_to_csv, save_to_json
+from scraper import parse_books, get_next_page, save_to_csv, save_to_json, get_page
+from unittest.mock import Mock, patch
+import pytest
 import csv
 import json
+import requests
 
 def test_parse_books():
     html = """
@@ -99,3 +102,30 @@ def test_save_to_json(tmp_path):
         saved_books = json.load(file)
 
     assert saved_books == books
+
+
+def test_get_page_success():
+    fake_response = Mock()
+    fake_response.text = "<html>Test page</html>"
+
+    with patch("scraper.requests.get", return_value=fake_response) as mock_get:
+        html = get_page("https://example.com")
+
+    assert html == "<html>Test page</html>"
+
+    mock_get.assert_called_once_with(
+        "https://example.com",
+        timeout=10,
+    )
+
+
+def test_get_page_failure():
+    with patch(
+        "scraper.requests.get",
+        side_effect=requests.ConnectionError("Connection failed"),
+    ) as mock_get:
+        with patch("scraper.time.sleep"):
+            with pytest.raises(RuntimeError):
+                get_page("https://example.com")
+
+    assert mock_get.call_count == 3
