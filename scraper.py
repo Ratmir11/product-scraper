@@ -47,11 +47,29 @@ def parse_books(html, page_url):
     for article in articles:
         link = article.select_one("h3 a")
 
+        if link is None or not link.get("title"):
+            continue
+
         title = link["title"]
-        price = article.select_one(".price_color").get_text(strip=True)
-        availability = article.select_one(".availability").get_text(strip=True)
+
+        price_element = article.select_one(".price_color")
+
+        if price_element is None:
+            continue
+
+        price = price_element.get_text(strip=True)
+
+        availability_element = article.select_one(".availability")
+
+        if availability_element is None:
+            continue
+
+        availability = availability_element.get_text(strip=True)
 
         rating_element = article.select_one(".star-rating")
+        if rating_element is None:
+            continue
+
         rating = rating_element["class"][1]
 
         book_url = urljoin(page_url, link["href"])

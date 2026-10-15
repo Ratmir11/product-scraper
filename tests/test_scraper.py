@@ -182,3 +182,70 @@ def test_scrape_all_books(monkeypatch):
         "https://example.com/page-1.html",
         "https://example.com/page-2.html",
     ]
+
+
+def test_parse_books_missing_title():
+    html = """
+    <html>
+        <article class="product_pod">
+            <p class="price_color">£20.00</p>
+            <p class="availability">In stock</p>
+            <p class="star-rating Five"></p>
+        </article>
+    </html>
+    """
+
+    books = parse_books(html, "https://example.com/")
+
+    assert books == []
+
+
+def test_parse_books_missing_price():
+    html = """
+    <html>
+        <article class="product_pod">
+            <h3><a href="book.html" title="Python Basics">Book</a></h3>
+            <p class="availability">In stock</p>
+            <p class="star-rating Five"></p>
+        </article>
+    </html>
+    """
+
+    books = parse_books(html, "https://example.com/")
+
+    assert books == []
+
+
+def test_parse_books_missing_rating():
+    html = """
+    <html>
+        <article class="product_pod">
+            <h3>
+                <a href="book.html" title="Python Basics">Book</a>
+            </h3>
+            <p class="price_color">£20.00</p>
+            <p class="availability">In stock</p>
+        </article>
+    </html>
+    """
+
+    books = parse_books(html, "https://example.com/")
+
+    assert books == []
+
+def test_parse_books_missing_availability():
+    html = """
+    <html>
+        <article class="product_pod">
+            <h3>
+                <a href="book.html" title="Python Basics">Book</a>
+            </h3>
+            <p class="price_color">£20.00</p>
+            <p class="star-rating Five"></p>
+        </article>
+    </html>
+    """
+
+    books = parse_books(html, "https://example.com/")
+
+    assert books == []
